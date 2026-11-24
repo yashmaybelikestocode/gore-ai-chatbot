@@ -1,5 +1,7 @@
 # GORE - The War God Chatbot
 
+🔗 **Live website: https://gore-ai-chatbot.vercel.app**
+
 An AI chatbot (student project) that:
 - **Searches the web** with DuckDuckGo (no key needed) and shows its sources.
 - **Remembers your chats**: history is saved in your browser and listed in the sidebar; Gore uses earlier messages of a chat as context.
