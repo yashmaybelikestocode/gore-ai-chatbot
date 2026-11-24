@@ -5,7 +5,7 @@
 An AI chatbot (student project) that:
 - **Searches the web** with DuckDuckGo (no key needed) and shows its sources.
 - **Remembers your chats**: history is saved in your browser and listed in the sidebar; Gore uses earlier messages of a chat as context.
-- Uses a **free Groq API key** (model `openai/gpt-oss-120b`). No Claude/OpenAI key.
+- Uses a **free Groq API key** (model `openai/gpt-oss-120b`). No paid API needed.
 - **Keeps the API key hidden**: the key lives only on the server (`.env` locally, Environment Variables on Vercel) and is never sent to the browser.
 
 ## Run locally
