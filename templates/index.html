@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GORE - The War God Chatbot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  /* ===== GORE theme: ash, blood and bronze ===== */
+  :root {
+    --ash: #0e0c0b;
+    --stone: #191513;
+    --stone2: #221c19;
+    --blood: #9e1b1b;
+    --blood-bright: #d32f2f;
+    --bronze: #b08d57;
+    --bone: #e9dfcf;
+    --muted: #8f8170;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    font-family: "Crimson Text", Georgia, serif;
+    font-size: 17px;
+    color: var(--bone);
+    background:
+      radial-gradient(ellipse at 50% 120%, rgba(158,27,27,.35), transparent 60%),
+      radial-gradient(ellipse at 50% -20%, rgba(176,141,87,.08), transparent 50%),
+      var(--ash);
+  }
+
+  /* ---------- sidebar ---------- */
+  #sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, #1a1412, #0f0c0b);
+    border-right: 2px solid #3a2a22;
+    display: flex;
+    flex-direction: column;
+    transition: width .25s;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #sidebar.closed { width: 0; border-right: none; }
+
+  .logo {
+    padding: 18px 16px 12px;
+    text-align: center;
+    border-bottom: 1px solid #3a2a22;
+    white-space: nowrap;
+  }
+  .logo .name {
+    font-family: "Cinzel", serif;
+    font-weight: 900;
+    font-size: 34px;
+    letter-spacing: 6px;
+    color: var(--blood-bright);
+    text-shadow: 0 0 12px rgba(211,47,47,.5), 2px 2px 0 #000;
+  }
+  .logo .tag { font-size: 13px; color: var(--bronze); font-style: italic; }
+  .runes { color: #4a3a30; font-size: 13px; letter-spacing: 4px; text-align: center; padding: 6px 0; white-space: nowrap; overflow: hidden; }
+
+  .new-btn {
+    margin: 12px 14px;
+    padding: 10px;
+    font-family: "Cinzel", serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--bone);
+    background: linear-gradient(180deg, #b32020, #6e1010);
+    border: 1px solid var(--bronze);
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .new-btn:hover { background: linear-gradient(180deg, #d32f2f, #861414); box-shadow: 0 0 12px rgba(211,47,47,.5); }
+
+  .label { padding: 6px 16px; font-family: "Cinzel", serif; font-size: 11px; letter-spacing: 3px; color: var(--bronze); white-space: nowrap; }
+
+  #chats { flex: 1; overflow-y: auto; padding: 0 8px; }
+  .chat-item {
+    display: flex; align-items: center;
+    padding: 8px 10px; margin-bottom: 2px;
+    cursor: pointer; white-space: nowrap;
+    color: var(--muted);
+    border-left: 3px solid transparent;
+  }
+  .chat-item:hover { background: var(--stone2); color: var(--bone); }
+  .chat-item.active { background: var(--stone2); color: var(--bone); border-left-color: var(--blood-bright); }
+  .chat-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .chat-item .del { display: none; background: none; border: none; color: var(--blood-bright); cursor: pointer; font-size: 14px; }
+  .chat-item:hover .del { display: inline; }
+
+  .side-foot { padding: 10px 16px; font-size: 12px; color: var(--muted); border-top: 1px solid #3a2a22; white-space: nowrap; }
+
+  /* ---------- main ---------- */
+  main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #3a2a22;
+    background: rgba(14,12,11,.85);
+  }
+  .toggle {
+    font-family: "Cinzel", serif; font-size: 12px; letter-spacing: 1px;
+    color: var(--bronze); background: var(--stone);
+    border: 1px solid #3a2a22; border-radius: 3px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  .toggle:hover { border-color: var(--bronze); color: var(--bone); }
+  .topbar .title { font-family: "Cinzel", serif; font-weight: 700; letter-spacing: 4px; color: var(--blood-bright); }
+
+  #messages { flex: 1; overflow-y: auto; padding: 24px 20px; }
+
+  .msg { max-width: 780px; margin: 0 auto 18px; display: flex; }
+  .msg.user { justify-content: flex-end; }
+  .bubble { max-width: 85%; padding: 12px 16px; line-height: 1.55; border-radius: 3px; }
+  .msg.user .bubble {
+    background: linear-gradient(180deg, #5a1414, #3d0d0d);
+    border: 1px solid #7a2020;
+    white-space: pre-wrap;
+  }
+  .msg.assistant .bubble {
+    background: var(--stone);
+    border: 1px solid #3a2a22;
+    border-left: 3px solid var(--bronze);
+  }
+  .bubble .name { font-family: "Cinzel", serif; font-weight: 700; font-size: 13px; letter-spacing: 3px; color: var(--blood-bright); margin-bottom: 4px; }
+  .bubble p { margin: 6px 0; }
+  .bubble strong { color: #f3e6d0; }
+  .bubble a { color: var(--bronze); }
+  .bubble table { border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+  .bubble th, .bubble td { border: 1px solid #3a2a22; padding: 5px 9px; }
+  .bubble th { background: var(--stone2); color: var(--bronze); }
+  .bubble pre { background: #0a0807; padding: 10px; overflow-x: auto; border: 1px solid #2a201b; }
+  .bubble code { font-size: 14px; }
+  .bubble.error { border-left-color: var(--blood-bright); color: #ff8a80; }
+  .typing { color: var(--muted); font-style: italic; }
+
+  .sources { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #3a2a22; font-size: 14px; }
+  .sources b { font-family: "Cinzel", serif; font-size: 11px; letter-spacing: 2px; color: var(--bronze); }
+  .sources a { display: block; color: var(--muted); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sources a:hover { color: var(--bone); }
+
+  .welcome { text-align: center; margin-top: 14vh; }
+  .welcome .big {
+    font-family: "Cinzel", serif; font-weight: 900;
+    font-size: 72px; letter-spacing: 14px;
+    color: var(--blood-bright);
+    text-shadow: 0 0 25px rgba(211,47,47,.45), 3px 3px 0 #000;
+  }
+  .welcome .sub { color: var(--bronze); font-style: italic; font-size: 19px; }
+  .welcome .hint { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  form {
+    display: flex; gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid #3a2a22;
+    background: rgba(14,12,11,.9);
+  }
+  textarea {
+    flex: 1; resize: none; height: 46px; padding: 10px 12px;
+    font-family: inherit; font-size: 16px;
+    color: var(--bone); background: var(--stone);
+    border: 1px solid #3a2a22; border-radius: 3px;
+  }
+  textarea:focus { outline: none; border-color: var(--blood-bright); box-shadow: 0 0 10px rgba(211,47,47,.3); }
+  textarea::placeholder { color: #6b5e50; }
+  form button {
+    font-family: "Cinzel", serif; font-weight: 700; letter-spacing: 2px;
+    padding: 0 22px; color: var(--bone);
+    background: linear-gradient(180deg, #b32020, #6e1010);
+    border: 1px solid var(--bronze); border-radius: 3px; cursor: pointer;
+  }
+  form button:hover { box-shadow: 0 0 12px rgba(211,47,47,.5); }
+  form button:disabled { opacity: .5; box-shadow: none; }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: #3a2a22; }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="logo">
+    <div class="name">GORE</div>
+    <div class="tag">god of answers</div>
+  </div>
+  <div class="runes">ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃ</div>
+  <button class="new-btn" onclick="newChat()">⚔ NEW BATTLE</button>
+  <div class="label">PAST BATTLES</div>
+  <div id="chats"></div>
+  <div class="side-foot">Chats are saved in this browser.</div>
+</div>
+
+<main>
+  <div class="topbar">
+    <button class="toggle" id="toggleBtn" onclick="toggleSidebar()">◀ HIDE</button>
+    <span class="title">GORE</span>
+  </div>
+  <div id="messages"></div>
+  <form id="form">
+    <textarea id="input" placeholder="Speak, mortal... ask your question"></textarea>
+    <button id="send">STRIKE</button>
+  </form>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ---------- chat history saved in the browser ----------
+let chats = [];
+let currentId = null;
+function loadStore() {
+  try { chats = JSON.parse(localStorage.getItem("gore_chats") || "[]"); } catch (e) { chats = []; }
+}
+function saveStore() {
+  try { localStorage.setItem("gore_chats", JSON.stringify(chats)); } catch (e) {}
+}
+const current = () => chats.find(c => c.id === currentId);
+
+// ---------- sidebar minimize / maximize ----------
+function toggleSidebar() {
+  const sb = $("sidebar");
+  sb.classList.toggle("closed");
+  const closed = sb.classList.contains("closed");
+  $("toggleBtn").textContent = closed ? "☰ SHOW" : "◀ HIDE";
+  try { localStorage.setItem("gore_sidebar_closed", closed); } catch (e) {}
+}
+
+// ---------- render ----------
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function render(role, content, sources = [], isError = false) {
+  const w = document.querySelector(".welcome");
+  if (w) w.remove();
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  const bubble = document.createElement("div");
+  bubble.className = "bubble" + (isError ? " error" : "");
+  if (role === "user") {
+    bubble.textContent = content;
+  } else {
+    let html = `<div class="name">GORE</div>` + marked.parse(content || "");
+    if (sources && sources.length) {
+      html += `<div class="sources"><b>SOURCES</b>`;
+      sources.forEach((s, i) => {
+        html += `<a href="${escapeHtml(s.url)}" target="_blank" rel="noopener" title="${escapeHtml(s.url)}">[${i + 1}] ${escapeHtml(s.title || s.url)}</a>`;
+      });
+      html += `</div>`;
+    }
+    bubble.innerHTML = html;
+  }
+  div.appendChild(bubble);
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+  return div;
+}
+
+function showWelcome() {
+  $("messages").innerHTML = `
+    <div class="welcome">
+      <div class="big">GORE</div>
+      <div class="sub">Ask, and the war god shall answer.</div>
+      <div class="hint">I search the realms of the web and remember our past battles.</div>
+    </div>`;
+}
+
+function renderSidebar() {
+  $("chats").innerHTML = "";
+  chats.forEach(c => {
+    const el = document.createElement("div");
+    el.className = "chat-item" + (c.id === currentId ? " active" : "");
+    el.innerHTML = `<span></span><button class="del" title="Delete">✕</button>`;
+    el.querySelector("span").textContent = c.title;
+    el.onclick = () => openChat(c.id);
+    el.querySelector(".del").onclick = e => {
+      e.stopPropagation();
+      if (!confirm("Destroy this battle forever?")) return;
+      chats = chats.filter(x => x.id !== c.id);
+      saveStore();
+      if (currentId === c.id) newChat(); else renderSidebar();
+    };
+    $("chats").appendChild(el);
+  });
+}
+
+function openChat(id) {
+  currentId = id;
+  $("messages").innerHTML = "";
+  current().messages.forEach(m => render(m.role, m.content, m.sources));
+  renderSidebar();
+}
+
+function newChat() {
+  currentId = null;
+  showWelcome();
+  renderSidebar();
+  $("input").focus();
+}
+
+// ---------- send ----------
+$("form").onsubmit = async e => {
+  e.preventDefault();
+  const text = $("input").value.trim();
+  if (!text) return;
+  $("input").value = "";
+  $("send").disabled = true;
+
+  if (!current()) {
+    const chat = { id: Date.now(), title: text.slice(0, 40), messages: [] };
+    chats.unshift(chat);
+    currentId = chat.id;
+  }
+  const chat = current();
+  chat.messages.push({ role: "user", content: text });
+  saveStore();
+  renderSidebar();
+  render("user", text);
+
+  const typing = render("assistant", "*Gore is consulting the realms...*");
+  typing.querySelector(".bubble").classList.add("typing");
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: chat.messages.map(m => ({ role: m.role, content: m.content })) })
+    });
+    const data = await res.json();
+    typing.remove();
+    if (data.error) {
+      render("assistant", data.error, [], true);
+    } else {
+      chat.messages.push({ role: "assistant", content: data.answer, sources: data.sources || [] });
+      saveStore();
+      render("assistant", data.answer, data.sources);
+    }
+  } catch (err) {
+    typing.remove();
+    render("assistant", "The realms are unreachable: " + err, [], true);
+  }
+  $("send").disabled = false;
+  $("input").focus();
+};
+
+$("input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("form").requestSubmit(); }
+});
+
+// ---------- start ----------
+loadStore();
+try { if (localStorage.getItem("gore_sidebar_closed") === "true") toggleSidebar(); } catch (e) {}
+showWelcome();
+renderSidebar();
+</script>
+</body>
+</html>
